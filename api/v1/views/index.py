@@ -12,18 +12,12 @@ from models.review import Review
 from models.user import User
 
 
-# create  a route /status on the object app_views that returns a JSON
-# status response
 @app_views.route('/status', strict_slashes=False)
 def status():
     """ Returns a JSON status response """
-    # return {"status": "OK"}
-    # jsonify function converts a python dict to JSON string
     return jsonify({"status": "OK"})
 
 
-# create a route /stats on the object app_views that returns a JSON stats
-# response
 @app_views.route('/stats', strict_slashes=False)
 def stats():
     """ Returns a JSON stats response """
