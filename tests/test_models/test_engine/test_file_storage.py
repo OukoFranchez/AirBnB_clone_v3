@@ -3,6 +3,7 @@
 Contains the TestFileStorageDocs classes
 """
 
+from console import HBNBCommand
 from datetime import datetime
 import inspect
 import models
@@ -14,6 +15,7 @@ from models.place import Place
 from models.review import Review
 from models.state import State
 from models.user import User
+from models import storage
 import json
 import os
 import pep8
@@ -68,20 +70,24 @@ test_file_storage.py'])
                             "{:s} method needs a docstring".format(func[0]))
 
 
+@unittest.skipIf(models.storage_t == 'db', 'database storage not supported')
 class TestFileStorage(unittest.TestCase):
     """Test the FileStorage class"""
-    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    @classmethod
+    def setUpClass(cls):
+        """ Set up test environment """
+        cls.command = HBNBCommand()
+
     def test_all_returns_dict(self):
         """Test that all returns the FileStorage.__objects attr"""
-        storage = FileStorage()
+        # storage = FileStorage()
         new_dict = storage.all()
         self.assertEqual(type(new_dict), dict)
         self.assertIs(new_dict, storage._FileStorage__objects)
 
-    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
     def test_new(self):
         """test that new adds an object to the FileStorage.__objects attr"""
-        storage = FileStorage()
+        # storage = FileStorage()
         save = FileStorage._FileStorage__objects
         FileStorage._FileStorage__objects = {}
         test_dict = {}
@@ -94,10 +100,9 @@ class TestFileStorage(unittest.TestCase):
                 self.assertEqual(test_dict, storage._FileStorage__objects)
         FileStorage._FileStorage__objects = save
 
-    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
     def test_save(self):
         """Test that save properly saves objects to file.json"""
-        storage = FileStorage()
+        # storage = FileStorage()
         new_dict = {}
         for key, value in classes.items():
             instance = value()
@@ -113,3 +118,34 @@ class TestFileStorage(unittest.TestCase):
         with open("file.json", "r") as f:
             js = f.read()
         self.assertEqual(json.loads(string), json.loads(js))
+
+    def test_count_method(self):
+        """ Test method_to get count """
+        # initialize sqlalchemy connection
+        storage.reload()
+
+        # get the initial objects
+        init_objs = storage.all(State)
+
+        # get the number of objects using count method
+        count = storage.count(State)
+
+        # Confirm the results
+        self.assertEqual(len(init_objs), count)
+
+    def test_get_method(self):
+        """ Test method_to get created object """
+        # initialize sqlalchemy connection
+        storage.reload()
+
+        # create a user object
+        user = User(email='jdoe@mail.com', password='1234',
+                    first_name='John', last_name='Doe')
+        storage.new(user)
+        storage.save()
+
+        # get the created object
+        stored_user = storage.get(User, user.id)
+
+        # Confirm the results
+        self.assertEqual(user, stored_user)
